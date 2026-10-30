@@ -404,6 +404,7 @@ export function containerCreateOptions(input: ComputerCreateInput) {
   return {
     Image: input.image,
     name: input.name,
+    Cmd: ["/usr/local/bin/rakazo-computer"],
     User: input.user ?? COMPUTER_USER,
     Tty: true,
     Env: [
