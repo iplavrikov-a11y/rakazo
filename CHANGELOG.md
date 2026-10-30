@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Computer sandbox containers failed to provision or hung when image entrypoint/cmd was modified or drifted during custom package installs. The sandbox supervisor now enforces explicit `Cmd: ["/usr/local/bin/rakazo-computer"]` and runs as non-root user `1000:1000` with guarded bind mounts.
+- Computer-enabled bots defaulted to opening graphical desktop browsers and requesting human screen takeover (`request_takeover`) for CLI/headless tasks. System instructions now prioritize `shell`, CLI commands, and headless browser tools (`agent-browser`) first, reserving GUI browser launches and takeover requests for cases where no programmatic or headless solution exists.
+- Human screen takeover waits (`waiting_takeover`) could hold and freeze conversational threads indefinitely up to the default lease window. Screen takeover lease expiration is now configurable via `COMPUTER_TAKEOVER_TTL_MS` (allowing shorter timeouts like 2 minutes).
 - Attachment validation rejected `.xlsx` and `.docx` files with `unsupported attachment type` error.
 - The Amazon Bedrock model picker was missing newer models available on Bedrock: Claude Sonnet 5.5, GPT-6 Luna, GPT-6 Sol and GPT-6.1 Sol, Grok 4.7, Kimi K3, GLM-5.3, and the India (`in.`) Claude inference profiles. They are now listed with their regional and global inference profiles until the bundled provider library ships them.
 - Fish Audio speech can use a model other than s2.1-pro. Each Fish connection can set Speech model in Voice settings; `FISH_TTS_MODEL` is the default only when that field is empty (unset still uses s2.1-pro). A failed speak, transcribe, or voice-list request logs the upstream Fish status and message, including when the error body cannot be read, and the message returned to the client does not include the API key.

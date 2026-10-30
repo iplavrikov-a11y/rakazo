@@ -374,6 +374,7 @@ SANDBOX_IDLE_MS=600000    # pause or stop after 10 minutes idle; 0 disables idle
 # Set 0 when self-hosting with Docker, where an idle computer costs nothing, to keep long-running apps and sessions up.
 # E2B, CreateOS and Box still apply their own timeouts.
 COMPUTER_MAX_ACTIVE_MS=7200000 # uptime cap for providers that bill while running; minimum 60000; 0 disables
+COMPUTER_TAKEOVER_TTL_MS=120000 # maximum duration (ms) a computer stays held for takeover before timing out (default 900000 / 15m; 120000 / 2m recommended)
 SANDBOX_COMMAND_TIMEOUT_MS=300000 # stop a shell command after 5 minutes
 MAX_TOOL_CALLS_PER_TURN=  # optional Pi turn tool-call fuse; unset/0 = unlimited
 RAKAZO_MESSAGE_USER_MAX_CHARS=500 # message_user length cap; narration stays at 500
