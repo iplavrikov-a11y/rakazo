@@ -352,7 +352,7 @@ export type SandboxInput =
 
 export function containerCreateOptions(input: ComputerCreateInput) {
   const ports = computerPortBindings(input.publishControlPort);
-  const hostProjectsDir = process.env.HOST_PROJECTS_DIR ?? "/root/projects";
+  const hostProjectsDir = process.env.HOST_PROJECTS_DIR;
   const mounts: Docker.MountSettings[] = [
     ...(input.homeVolume
       ? [
@@ -366,7 +366,7 @@ export function containerCreateOptions(input: ComputerCreateInput) {
             } as Docker.MountSettings["VolumeOptions"],
           },
         ]
-      : input.homePath
+      : input.homePath && hostProjectsDir
         ? [
             {
               Type: "bind" as const,
@@ -375,38 +375,44 @@ export function containerCreateOptions(input: ComputerCreateInput) {
             },
           ]
         : []),
-    {
-      Type: "bind" as const,
-      Source: hostProjectsDir,
-      Target: "/root/projects",
-    },
-    {
-      Type: "bind" as const,
-      Source: hostProjectsDir,
-      Target: "/home/rakazo/projects",
-    },
-    {
-      Type: "bind" as const,
-      Source: "/",
-      Target: "/host",
-    },
-    {
-      Type: "bind" as const,
-      Source: "/var/run/docker.sock",
-      Target: "/var/run/docker.sock",
-    },
+    ...(hostProjectsDir
+      ? [
+          {
+            Type: "bind" as const,
+            Source: hostProjectsDir,
+            Target: "/root/projects",
+          },
+          {
+            Type: "bind" as const,
+            Source: hostProjectsDir,
+            Target: "/home/rakazo/projects",
+          },
+          {
+            Type: "bind" as const,
+            Source: "/",
+            Target: "/host",
+          },
+          {
+            Type: "bind" as const,
+            Source: "/var/run/docker.sock",
+            Target: "/var/run/docker.sock",
+          },
+        ]
+      : []),
   ];
 
   return {
     Image: input.image,
     name: input.name,
-    User: "0:0",
+    User: input.user ?? COMPUTER_USER,
     Tty: true,
     Env: [
       "DISPLAY=:1",
-      "HOME=/root",
-      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/rakazo/.local/bin",
-      `PROJECTS_DIR=${hostProjectsDir}`,
+      "HOME=/home/rakazo",
+      "PATH=/home/rakazo/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "NPM_CONFIG_PREFIX=/home/rakazo/.local",
+      "PIP_USER=1",
+      ...(hostProjectsDir ? [`PROJECTS_DIR=${hostProjectsDir}`] : []),
       ...(input.controlToken ? [`RAKAZO_COMPUTER_CONTROL_TOKEN=${input.controlToken}`] : []),
     ],
     Labels: {
@@ -416,16 +422,24 @@ export function containerCreateOptions(input: ComputerCreateInput) {
     },
     ExposedPorts: ports.ExposedPorts,
     HostConfig: {
-      Mounts: mounts,
+      ...(input.homeVolume || hostProjectsDir
+        ? { Mounts: mounts, Binds: undefined }
+        : { Binds: [`${input.homePath}:/home/rakazo`], Mounts: undefined }),
       PortBindings: ports.PortBindings,
       ShmSize: 256 * 1024 * 1024,
+      ...(hostProjectsDir
+        ? {}
+        : {
+            CapDrop: ["ALL"],
+            SecurityOpt: ["no-new-privileges:true"],
+          }),
       ...computerResourceLimits(),
       ReadonlyPaths: ["/usr/share/novnc"],
       AutoRemove: false,
       NetworkMode: input.networkMode ?? "bridge",
       ...(input.dns ? { Dns: input.dns } : {}),
     },
-    WorkingDir: "/root/projects",
+    WorkingDir: "/home/rakazo",
   };
 }
 
