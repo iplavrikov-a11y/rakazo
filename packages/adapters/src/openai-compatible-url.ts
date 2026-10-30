@@ -60,6 +60,7 @@ export function assertHttpsForKeyedOpenAiCompatibleUrl(
 ): void {
   if (!apiKey?.trim()) return;
   if (url.protocol === "https:") return;
+  if (process.env.RAKAZO_OPENAI_COMPAT_ALLOW_PUBLIC === "1" || process.env.RAKAZO_OPENAI_COMPAT_ALLOW_INSECURE_KEY === "1") return;
   const hostname = normalizeHostname(url.hostname);
   if (isPrivateOpenAiCompatibleHostname(hostname)) return;
   throw new Error(

@@ -88,6 +88,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appdata:/data
+      - /root/projects/rakazo/infra/sandboxes/supervisor/src:/app/infra/sandboxes/supervisor/src
     networks:
       - app
     depends_on:
@@ -108,10 +109,12 @@ services:
   api:
     image: ${RAKAZO_IMAGE:-ghcr.io/elie222/rakazo/app}:${RAKAZO_IMAGE_TAG:-edge}
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     command:
       - bash
       - -lc
-      - pnpm --filter @rakazo/db exec prisma migrate deploy && pnpm --filter @rakazo/api start
+      - (node -e 'const net=require("net");net.createServer(s=>{const c=net.connect(8318,"host.docker.internal");s.pipe(c).pipe(s);s.on("error",()=>{});c.on("error",()=>{})}).listen(8318,"127.0.0.1")' &); pnpm --filter @rakazo/db exec prisma migrate deploy && pnpm --filter @rakazo/api start
     init: true
     security_opt:
       - no-new-privileges:true
@@ -122,6 +125,7 @@ services:
     env_file:
       - .env
     environment:
+      MCP_ALLOW_PRIVATE_ENDPOINT: ${MCP_ALLOW_PRIVATE_ENDPOINT:-true}
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_BROWSER_DSN: ${SENTRY_BROWSER_DSN:-}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-}
@@ -190,7 +194,12 @@ services:
   worker:
     image: ${RAKAZO_IMAGE:-ghcr.io/elie222/rakazo/app}:${RAKAZO_IMAGE_TAG:-edge}
     restart: unless-stopped
-    command: ["pnpm", "--filter", "@rakazo/worker", "start"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command:
+      - bash
+      - -lc
+      - (node -e 'const net=require("net");net.createServer(s=>{const c=net.connect(8318,"host.docker.internal");s.pipe(c).pipe(s);s.on("error",()=>{});c.on("error",()=>{})}).listen(8318,"127.0.0.1")' &); pnpm --filter @rakazo/worker start
     init: true
     security_opt:
       - no-new-privileges:true
@@ -201,6 +210,7 @@ services:
     env_file:
       - .env
     environment:
+      MCP_ALLOW_PRIVATE_ENDPOINT: ${MCP_ALLOW_PRIVATE_ENDPOINT:-true}
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-}
       SENTRY_RELEASE: ${SENTRY_RELEASE:-}

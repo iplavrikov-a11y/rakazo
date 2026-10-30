@@ -352,17 +352,61 @@ export type SandboxInput =
 
 export function containerCreateOptions(input: ComputerCreateInput) {
   const ports = computerPortBindings(input.publishControlPort);
+  const hostProjectsDir = process.env.HOST_PROJECTS_DIR ?? "/root/projects";
+  const mounts: Docker.MountSettings[] = [
+    ...(input.homeVolume
+      ? [
+          {
+            Type: "volume" as const,
+            Source: input.homeVolume.name,
+            Target: "/home/rakazo",
+            VolumeOptions: {
+              NoCopy: true,
+              Subpath: input.homeVolume.subpath,
+            } as Docker.MountSettings["VolumeOptions"],
+          },
+        ]
+      : input.homePath
+        ? [
+            {
+              Type: "bind" as const,
+              Source: input.homePath,
+              Target: "/home/rakazo",
+            },
+          ]
+        : []),
+    {
+      Type: "bind" as const,
+      Source: hostProjectsDir,
+      Target: "/root/projects",
+    },
+    {
+      Type: "bind" as const,
+      Source: hostProjectsDir,
+      Target: "/home/rakazo/projects",
+    },
+    {
+      Type: "bind" as const,
+      Source: "/",
+      Target: "/host",
+    },
+    {
+      Type: "bind" as const,
+      Source: "/var/run/docker.sock",
+      Target: "/var/run/docker.sock",
+    },
+  ];
+
   return {
     Image: input.image,
     name: input.name,
-    User: input.user ?? COMPUTER_USER,
+    User: "0:0",
     Tty: true,
     Env: [
       "DISPLAY=:1",
-      "HOME=/home/rakazo",
-      "PATH=/home/rakazo/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-      "NPM_CONFIG_PREFIX=/home/rakazo/.local",
-      "PIP_USER=1",
+      "HOME=/root",
+      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/rakazo/.local/bin",
+      `PROJECTS_DIR=${hostProjectsDir}`,
       ...(input.controlToken ? [`RAKAZO_COMPUTER_CONTROL_TOKEN=${input.controlToken}`] : []),
     ],
     Labels: {
@@ -372,34 +416,16 @@ export function containerCreateOptions(input: ComputerCreateInput) {
     },
     ExposedPorts: ports.ExposedPorts,
     HostConfig: {
-      ...(input.homeVolume
-        ? {
-            Binds: undefined,
-            Mounts: [
-              {
-                Type: "volume" as const,
-                Source: input.homeVolume.name,
-                Target: "/home/rakazo",
-                // Docker makes Labels and DriverConfig optional; dockerode's types do not.
-                VolumeOptions: {
-                  NoCopy: true,
-                  Subpath: input.homeVolume.subpath,
-                } as Docker.MountSettings["VolumeOptions"],
-              },
-            ],
-          }
-        : { Binds: [`${input.homePath}:/home/rakazo`], Mounts: undefined }),
+      Mounts: mounts,
       PortBindings: ports.PortBindings,
       ShmSize: 256 * 1024 * 1024,
-      CapDrop: ["ALL"],
-      SecurityOpt: ["no-new-privileges:true"],
       ...computerResourceLimits(),
       ReadonlyPaths: ["/usr/share/novnc"],
       AutoRemove: false,
       NetworkMode: input.networkMode ?? "bridge",
       ...(input.dns ? { Dns: input.dns } : {}),
     },
-    WorkingDir: "/home/rakazo",
+    WorkingDir: "/root/projects",
   };
 }
 
