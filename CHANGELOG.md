@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Sandboxed computer containers lacked access to host projects and root-owned files when `HOST_PROJECTS_DIR` was set. The sandbox supervisor now mounts host projects and root filesystem, running with root UID when `HOST_PROJECTS_DIR` is configured so bots can inspect server projects and configs.
 - Vite preview mode blocked self-hosted reverse proxy requests with `403 Blocked request. This host is not allowed`. The preview server now automatically derives allowed hosts from `WEB_ORIGIN` and `BETTER_AUTH_URL` alongside `RAKAZO_HOST` and `RAKAZO_ALLOWED_HOSTS`.
 - Fixed duplicate object key in `packages/core/src/attachments.ts` attachment extension map.
 - Computer sandbox containers failed to provision or hung when image entrypoint/cmd was modified or drifted during custom package installs. The sandbox supervisor now enforces explicit `Cmd: ["/usr/local/bin/rakazo-computer"]` and runs as non-root user `1000:1000` with guarded bind mounts.
