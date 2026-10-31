@@ -980,6 +980,20 @@ Images use existing inline chat rendering. MP4 files can be previewed with nativ
 video controls on web and Electron and opened/downloaded through the existing
 native file flow on mobile. No new mobile player or settings screen is required.
 
+## Voice calls and speech models
+
+Rakazo supports real-time conversational voice calls and audio replies using pluggable voice providers:
+- **ElevenLabs**: Flash v2.5 for text-to-speech synthesis and Scribe (`scribe_v1`) for speech-to-text transcription.
+- **OpenAI**: TTS (`tts-1`) and Whisper transcription (`whisper-1`).
+- **Cartesia**: Sonic low-latency voice synthesis (speech-only).
+- **Fish Audio**: Expressive speech models and cloning.
+- **Self-hosted**: Any OpenAI-compatible speech endpoint (such as Kokoro, Whisper, or Faster-Whisper).
+
+### Web/PWA vs Native Mobile Voice
+
+- **Web and Desktop**: The web client (`apps/web`) streams audio recordings directly to the API `/api/voice/transcribe` endpoint, leveraging the cloud provider's speech recognition model (e.g., ElevenLabs Scribe). This guarantees consistent cross-platform recognition across desktop browsers and mobile Chrome/Safari (installed as a PWA).
+- **Android Mobile App**: The native Android client (`apps/mobile`) uses on-device dictation via Android's `SpeechRecognizer` by default when enabled. Devices running custom vendor ROMs (such as Vivo OriginOS or Xiaomi HyperOS) may require configuring the default digital assistant to Google and installing offline language packages (e.g., Russian speech model) to prevent system speech service timeouts. For unrestricted speech recognition on these devices, running Rakazo as a PWA through mobile Chrome provides direct server-side transcription.
+
 ## Connect mobile clients
 
 The iOS and Android app can also point at a self-hosted origin at runtime. On the sign-in screen, tap **Use a custom server** and enter the same HTTPS origin as `WEB_ORIGIN` (for example `https://app.example.com`). Store builds still default to `EXPO_PUBLIC_API_URL`; the in-app setting is an override for people running their own API. Changing the server signs the device out of any previous session.

@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Voice architecture on mobile and vendor ROM compatibility: documented mobile voice input behavior on Android. When vendor ROMs (such as Vivo OriginOS or Xiaomi HyperOS) use proprietary speech services lacking offline multilingual or Russian speech recognition packages, the native speech recognizer can fail or mute input. The Web/PWA interface directly streams audio clips to the server `/api/voice/transcribe` endpoint (supported by ElevenLabs Scribe, OpenAI Whisper, or Fish Audio), providing universal cross-device speech input regardless of device-level speech services.
 - Message bubbles in the web/PWA transcript use more of a wide window's width (70%/74% caps raised to 84%/88%, still leaving room for the hover-actions gutter), instead of leaving a quarter to a third of a long message's row empty.
 - Every run's system instructions now state the current date and time (UTC), so bots judge deadlines, recency and scheduling from the real present instead of guessing it from training data or quoted timestamps.
 - Connect Slack, WhatsApp Business Cloud, or Telegram DMs to a bot from Messaging settings, alongside iMessage/SMS. Each app can use a different bot. Group conversations remain iMessage-only.
