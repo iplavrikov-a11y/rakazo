@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Vite preview mode blocked self-hosted reverse proxy requests with `403 Blocked request. This host is not allowed`. The preview server now automatically derives allowed hosts from `WEB_ORIGIN` and `BETTER_AUTH_URL` alongside `RAKAZO_HOST` and `RAKAZO_ALLOWED_HOSTS`.
+- Fixed duplicate object key in `packages/core/src/attachments.ts` attachment extension map.
 - Computer sandbox containers failed to provision or hung when image entrypoint/cmd was modified or drifted during custom package installs. The sandbox supervisor now enforces explicit `Cmd: ["/usr/local/bin/rakazo-computer"]` and runs as non-root user `1000:1000` with guarded bind mounts.
 - Computer-enabled bots defaulted to opening graphical desktop browsers and requesting human screen takeover (`request_takeover`) for CLI/headless tasks. System instructions now prioritize `shell`, CLI commands, and headless browser tools (`agent-browser`) first, reserving GUI browser launches and takeover requests for cases where no programmatic or headless solution exists.
 - Human screen takeover waits (`waiting_takeover`) could hold and freeze conversational threads indefinitely up to the default lease window. Screen takeover lease expiration is now configurable via `COMPUTER_TAKEOVER_TTL_MS` (allowing shorter timeouts like 2 minutes).

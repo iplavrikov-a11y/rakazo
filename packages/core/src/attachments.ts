@@ -212,7 +212,6 @@ const MIME_TYPE_EXTENSIONS: Record<AttachmentMimeType, string> = {
   "application/vnd.ms-excel": ".xls",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
   "application/msword": ".doc",
-  "application/zip": ".zip",
 };
 
 export function inferAttachmentMimeType(

@@ -401,13 +401,26 @@ export default defineConfig(({ mode }) => {
   const rootEnv = loadEnv(mode, path.resolve(import.meta.dirname, "../.."), "");
   const api = process.env.API_PROXY_TARGET ?? rootEnv.API_PROXY_TARGET ?? "http://127.0.0.1:3100";
   const previewHost = process.env.RAKAZO_HOST ?? rootEnv.RAKAZO_HOST ?? "localhost";
+  const webOriginHost = (() => {
+    try {
+      const origin =
+        process.env.WEB_ORIGIN ??
+        rootEnv.WEB_ORIGIN ??
+        process.env.BETTER_AUTH_URL ??
+        rootEnv.BETTER_AUTH_URL;
+      return origin ? new URL(origin).hostname : undefined;
+    } catch {
+      return undefined;
+    }
+  })();
   const allowedHosts = [
     previewHost,
+    webOriginHost,
     ...(process.env.RAKAZO_ALLOWED_HOSTS ?? rootEnv.RAKAZO_ALLOWED_HOSTS ?? "")
       .split(",")
       .map((entry) => entry.trim())
       .filter(Boolean),
-  ];
+  ].filter((host): host is string => Boolean(host));
   const screenProxySecret = () =>
     resolveScreenProxySecret({
       ...process.env,
